@@ -1,0 +1,34 @@
+/target
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Rust
+/target/
+**/*.rs.bk
+**/*.rs~ 
+Cargo.lock
+
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+~
+
+# Other files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Build artifacts
+**/*.o
+**/*.so
+**/*.dll
+**/*.exe
+**/*.out
+**/*.dSYM
