@@ -1,8 +1,3 @@
-//! This module defines the `Entity` struct and `EntityTraits` trait.
-//!
-//! The `Entity` struct represents a generic entity with a name and an attribute.
-//! The `EntityTraits` trait ensures a consistent interface for creating and interacting
-//! with entities across both meta and instance objects.
 
 pub trait EntityTraits<A> {
     /// Creates a new entity with the specified name and attribute.
