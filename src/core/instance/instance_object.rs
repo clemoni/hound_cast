@@ -1,11 +1,10 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use crate::{errors::attribute_error::AttributeError, meta::{meta_entity::MetaEntity, meta_object::MetaObject}, model::{entity::Entity, object::{Object, ObjectId}}};
+use crate::core::{errors::{AttributeError, UniqueIdError}, meta::{meta_entity::MetaEntity, meta_object::MetaObject}, model::{entity::Entity, object::Object, unique_id::Identifier, UniqueId}};
 
 use super::instance_entities::{InstanceAttributes, InstanceEntity};
 
-use crate::model::entity::EntityTraits;
-
+use crate::core::model::entity::EntityTraits;
 
 pub type InstanceObject = Object<InstanceEntity, InstanceAttributes>;
 
@@ -14,15 +13,19 @@ impl InstanceObject {
     pub fn new_instance(
         name: &str,
         entities: HashMap<String, Entity<InstanceAttributes>>,
-        meta_id: &ObjectId,
-    ) -> Self {
+        meta_id: &UniqueId,
+    ) -> Result<Self,UniqueIdError> {
     
-        Object {
-            name: name.to_string(),
-            entities,
-            id: ObjectId::new("instance"),
-            meta_id: Some(meta_id.clone()),
-            _marker: PhantomData,
+        let unique_id_res=UniqueId::new("instance", None);
+        match unique_id_res{
+            Ok(unique_id) => Ok(Object {
+                name: name.to_string(),
+                entities,
+                id: unique_id,
+                meta_id: Some(meta_id.clone()),
+                _marker: PhantomData,
+            }),
+            Err(err) => Err(err),
         }
     }
 }
@@ -31,14 +34,14 @@ pub struct InstanceObjectBuilder {
     name: String,
     meta_entities: HashMap<String, MetaEntity>,
     instance_entities: HashMap<String, InstanceEntity>,
-    meta_id: ObjectId,
+    meta_id: UniqueId,
 }
 
 impl InstanceObjectBuilder {
     /// Creates a new builder for an instance object.
     pub fn new(object: &MetaObject, name: &str) -> Self {
         let object_cloned = object.clone();
-        let object_cloned_id=object_cloned.get_object_id().clone();
+        let object_cloned_id=object_cloned.get_id().clone();
         InstanceObjectBuilder {
             name: name.to_string(),
             meta_entities: object_cloned.entities,
@@ -82,7 +85,7 @@ impl InstanceObjectBuilder {
     }
 
     /// Builds and returns the final `InstanceObject`.
-    pub fn build(self) -> InstanceObject {
+    pub fn build(self) -> Result<InstanceObject, UniqueIdError> {
         InstanceObject::new_instance(
             &self.name,
             self.instance_entities,
@@ -95,13 +98,13 @@ impl InstanceObjectBuilder {
 #[cfg(test)]
 mod test {
    
-    use crate::meta::meta_entity::MetaAttributes;
-
+    use crate::core::meta::meta_entity::MetaAttributes;
+    use crate::core::model::unique_id::Identifier;
     use super::*;
 
     #[test]
     fn test_instance_object_creation() {
-        let mut meta_object = MetaObject::new_meta("TestMeta");
+        let mut meta_object = MetaObject::new_meta("TestMeta").unwrap();
         meta_object.update_entity("attribute1", MetaAttributes::Text);
         meta_object.update_entity("attribute2", MetaAttributes::I16);
 
@@ -115,16 +118,16 @@ mod test {
             .unwrap();
         instance_builder.populate_missing_meta_entites();
 
-        let instance_object = instance_builder.build();
+        let instance_object = instance_builder.build().unwrap();
 
         assert_eq!(instance_object.name, "TestInstance");
-        assert!(instance_object.id.get_id().starts_with("instance_"));
-        assert_eq!(instance_object.get_meta_id().as_ref().unwrap().get_id(), meta_object.get_object_id().get_id());
+        assert!(instance_object.id.get_id().to_string().starts_with("instance"));
+        assert_eq!(instance_object.get_meta_id().as_ref().unwrap().get_id(), meta_object.get_id().get_id());
     }
 
     #[test]
     fn test_update_entity_failed() {
-        let meta_object = MetaObject::new_meta("TestMeta");
+        let meta_object = MetaObject::new_meta("TestMeta").unwrap();
 
         let mut instance_builder = InstanceObjectBuilder::new(&meta_object, "TestInstance");
 
@@ -138,13 +141,13 @@ mod test {
 
     #[test]
     fn test_missing_meta_entities_population() {
-        let mut meta_object = MetaObject::new_meta("TestMeta");
+        let mut meta_object = MetaObject::new_meta("TestMeta").unwrap();
         meta_object.update_entity("mandatory", MetaAttributes::Text);
 
         let mut instance_builder = InstanceObjectBuilder::new(&meta_object, "TestInstance");
         instance_builder.populate_missing_meta_entites();
 
-        let instance_object = instance_builder.build();
+        let instance_object = instance_builder.build().unwrap();
         assert!(instance_object.entities.contains_key("mandatory"));
         assert_eq!(
             instance_object
@@ -158,7 +161,7 @@ mod test {
 
     #[test]
     fn test_build_instance_object() {
-        let mut meta_object = MetaObject::new_meta("TestMeta");
+        let mut meta_object = MetaObject::new_meta("TestMeta").unwrap();
         meta_object.update_entity("attr1", MetaAttributes::Text);
         meta_object.update_entity("attr2", MetaAttributes::I16);
 
@@ -168,14 +171,14 @@ mod test {
             .unwrap();
         instance_builder.update_entity("attr2", Some("56")).unwrap();
 
-        let instance_object = instance_builder.build();
+        let instance_object = instance_builder.build().unwrap();
         assert_eq!(instance_object.name, "TestInstance");
-        assert!(instance_object.id.get_id().starts_with("instance_"));
+        assert!(instance_object.id.get_id().to_string().starts_with("instance"));
     }
 
     #[test]
     fn test_invalid_update_entity() {
-        let mut meta_object = MetaObject::new_meta("TestMeta");
+        let mut meta_object = MetaObject::new_meta("TestMeta").unwrap();
         meta_object.update_entity("attr1", MetaAttributes::Text);
 
         let mut instance_builder = InstanceObjectBuilder::new(&meta_object, "TestInstance");

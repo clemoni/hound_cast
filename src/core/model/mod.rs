@@ -7,4 +7,7 @@
 
 pub mod entity;
 pub mod object;
-pub mod object_collection;
+pub mod unique_id;
+
+pub use unique_id::{UniqueId, UniqueIdParts};
+pub use object::Object;

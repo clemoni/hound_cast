@@ -1,14 +1,13 @@
-use crate::model::object::Object;
 
-use super::meta_entity::{MetaAttributes, MetaEntity};
-
-
+use crate::core::model::object::Object;
+use crate::core::meta::meta_entity::{MetaEntity,MetaAttributes};
+use crate::core::errors::UniqueIdError;
 
 pub type MetaObject = Object<MetaEntity, MetaAttributes>;
 
 impl MetaObject {
-    pub fn new_meta(name: &str) -> Self {
-        Object::new(name, "meta", None)
+    pub fn new_meta(name: &str) -> Result<Self,UniqueIdError> {
+       Object::new(name, "meta", None)
     }
    
 }
@@ -18,15 +17,15 @@ impl MetaObject {
 #[cfg(test)]
 mod test {
     use super::*;
-
+    use crate::core::model::unique_id::Identifier;
 
     #[test]
     fn test_new_meta_object_creation() {
-        let meta_object = MetaObject::new_meta("TestMetaObject");
+        let meta_object = MetaObject::new_meta("TestMetaObject").unwrap();
 
         assert_eq!(meta_object.name, "TestMetaObject");
         assert!(meta_object.entities.is_empty());
-        assert!(meta_object.id.get_id().starts_with("meta_"));
+        assert!(meta_object.id.get_id().to_string().starts_with("meta"));
     }
 
     // #[test]
@@ -42,7 +41,7 @@ mod test {
 
     #[test]
     fn test_update_multiple_meta_entities() {
-        let mut meta_object = MetaObject::new_meta("TestMetaObject");
+        let mut meta_object = MetaObject::new_meta("TestMetaObject").unwrap();
         meta_object.update_entity("attribute1", MetaAttributes::Text);
         meta_object.update_entity("attribute2", MetaAttributes::I16);
 

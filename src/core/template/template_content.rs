@@ -7,11 +7,12 @@
 
 use std::collections::HashSet;
 use regex::Regex;
-use crate::{errors::template_error::TemplateError, model::{entity::EntityTraits, object::Object}};
+
+use crate::{core::model::{entity::EntityTraits, object::Object}, core::errors::TemplateError};
 
 
 /// Encapsulates the raw content of a template.
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct TemplateContent(String);
 
 impl TemplateContent {

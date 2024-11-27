@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{errors::attribute_error::AttributeError, model::entity::Entity};
+use crate::core::{errors::AttributeError, model::entity::Entity};
 
 
 pub type InstanceEntity = Entity<InstanceAttributes>;

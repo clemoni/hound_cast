@@ -3,7 +3,13 @@ name = "hound_cast"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "hound_cast"
+path = "src/lib.rs"
+
 [dependencies]
 uuid = {version = "1.11.0", features = ["v4"]} 
 regex = "1.*.*"
 thiserror = "2.0.3"
+chrono = "0.4.38"
+rand = "0.8.5"

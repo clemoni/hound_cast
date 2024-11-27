@@ -3,25 +3,11 @@
 //! An `Object` represents a collection of entities, either in meta form (defining a schema)
 //! or instance form (populated with real values).
 
-use std::{collections::HashMap, marker::PhantomData, process::Output};
+use std::{collections::HashMap, marker::PhantomData};
 
-use uuid::Uuid;
+use crate::core::errors::UniqueIdError;
 
-use super::entity::EntityTraits;
-
-#[derive(Debug, Clone,PartialEq)]
-pub struct ObjectId(String);
-
-impl ObjectId{
-    pub fn new(prefix:&str)->Self{
-        ObjectId(format!("{}_{}",prefix,Uuid::new_v4()))
-       
-    }
-
-    pub fn get_id(&self)->&str{
-        &self.0
-    }
-}
+use super::{entity::EntityTraits, unique_id::Identifier, UniqueId};
 
 
 #[derive(Debug, Clone)]
@@ -31,20 +17,24 @@ impl ObjectId{
 pub struct Object<E: EntityTraits<A>, A> {
     pub name: String,
     pub entities: HashMap<String, E>,
-    pub id: ObjectId,
-    pub meta_id: Option<ObjectId>,
+    pub id: UniqueId,
+    pub meta_id: Option<UniqueId>,
     pub _marker: PhantomData<A>,
 }
 
 impl<E: EntityTraits<A> + Clone, A: Clone> Object<E, A> {
     /// Creates a new object with the given name and ID prefix.
-    pub fn new(name: &str, prefix: &str, meta_id: Option<ObjectId>) -> Self {
-        Object {
-            name: name.to_string(),
-            entities: HashMap::new(),
-            id: ObjectId::new(prefix),
-            meta_id: meta_id,
-            _marker: PhantomData,
+    pub fn new(name: &str, prefix: &str, meta_id: Option<UniqueId>) -> Result<Self,UniqueIdError> {
+        let unique_id_res=UniqueId::new(prefix,None);
+        match unique_id_res{
+            Ok(unique_id) => Ok(Object {
+                name: name.to_string(),
+                entities: HashMap::new(),
+                id: unique_id,
+                meta_id: meta_id,
+                _marker: PhantomData,
+            }),
+            Err(err) => Err(err),
         }
     }
 
@@ -54,17 +44,17 @@ impl<E: EntityTraits<A> + Clone, A: Clone> Object<E, A> {
         self.entities.insert(name.to_string(), entity);
     }
 
-    // Get ID form object
-    pub fn get_object_id(&self) -> &ObjectId {
-        &self.id
-    }
+    // // Get ID form object
+    // pub fn get_object_id(&self) -> &UniqueId {
+    //     &self.id
+    // }
 
     // Get name form object
     pub fn get_name(&self)->&str{
         &self.name
     }
 
-    pub fn get_meta_id(&self)->&Option<ObjectId>{
+    pub fn get_meta_id(&self)->&Option<UniqueId>{
         &self.meta_id
     }
 
@@ -85,5 +75,11 @@ impl<E: EntityTraits<A> + Clone, A: Clone> Object<E, A> {
         });
 
         new_object
+    }
+}
+
+impl<E: EntityTraits<A> + Clone, A: Clone> Identifier for Object<E, A> {
+    fn get_id(&self) -> &UniqueId {
+        &self.id
     }
 }

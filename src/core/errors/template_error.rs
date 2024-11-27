@@ -22,4 +22,7 @@ pub enum TemplateError {
     /// Raised when template references entities missing from the `InstanceObject`.
     #[error("TemplateError: Following entities {0:?} are missing from the content being built")]
     MissingEntitiesFromMetaObject(Vec<String>),
+
+    #[error("TemplateError: Propagated error: {0}")]
+    PropagatedError(String)
 }

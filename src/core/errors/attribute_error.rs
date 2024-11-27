@@ -4,18 +4,14 @@
 
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+use thiserror::Error;
+
+#[derive(Debug, PartialEq,Error)]
 /// Enum representing errors that can occur during attribute parsing and validation.
 pub enum AttributeError{
+    #[error("AttributeError: Invalid Type {0}")]
     InvalidType(String),
+    #[error("AttributeError: None matching type {0}")]
     NonMatchingType(String)
 }
 
-impl fmt::Display for AttributeError{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self{
-            AttributeError::InvalidType(err) => write!(f, "Error {}",err),
-            AttributeError::NonMatchingType(err) => write!(f, "Error {}",err),
-        }
-    }
-}

@@ -1,4 +1,5 @@
-use crate::{errors::attribute_error::AttributeError, instance::instance_entities::InstanceAttributes, model::entity::Entity};
+use crate::core::{instance::instance_entities::InstanceAttributes, model::entity::Entity,errors::AttributeError};
+
 
 
 pub type MetaEntity = Entity<MetaAttributes>;
@@ -50,6 +51,8 @@ impl MetaAttributes {
 
 #[cfg(test)]
 mod test {
+    use crate::core::errors::AttributeError;
+
     use super::*;
     
 
